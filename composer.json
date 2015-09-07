@@ -1,0 +1,21 @@
+
+{
+  "name": "paradigm/payum-trustly",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=5.5.0",
+    "payum/core": "1.0.0-BETA1"
+  },
+  "config": {
+    "bin-dir": "bin"
+  },
+  "autoload": {
+    "psr-0": { "Paradigm": "src/" }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0-dev"
+    }
+  }
+}
