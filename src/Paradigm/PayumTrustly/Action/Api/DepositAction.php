@@ -4,16 +4,31 @@ namespace Paradigm\PayumTrustly\Action\Api;
 use Paradigm\PayumTrustly\Request\Api\Deposit;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
+use Payum\Core\Reply\HttpResponse;
 use Payum\Core\Request\GetHttpRequest;
+use Payum\Core\Request\RenderTemplate;
 use Payum\Core\Security\GenericTokenFactoryAwareInterface;
 use Payum\Core\Security\GenericTokenFactoryInterface;
 
 class DepositAction extends BaseApiAwareAction implements GenericTokenFactoryAwareInterface
 {
     /**
+     * @var
+     */
+    private $depositTemplate;
+
+    /**
      * @var GenericTokenFactoryInterface
      */
     protected $tokenFactory;
+
+    /**
+     * @param string $depositTemplate
+     */
+    public function __construct($depositTemplate)
+    {
+        $this->depositTemplate = $depositTemplate;
+    }
 
     /**
      * @param GenericTokenFactoryInterface $genericTokenFactory
@@ -91,6 +106,13 @@ class DepositAction extends BaseApiAwareAction implements GenericTokenFactoryAwa
         );
 
         $model->replace($deposit->getData());
+
+        $renderTemplate = new RenderTemplate($this->depositTemplate, array(
+            'url' => $model['url'],
+        ));
+        $this->gateway->execute($renderTemplate);
+
+        throw new HttpResponse($renderTemplate->getResult());
     }
     /**
      * {@inheritDoc}

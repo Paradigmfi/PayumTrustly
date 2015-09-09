@@ -7,6 +7,7 @@ use Paradigm\PayumTrustly\Action\ConvertPaymentAction;
 use Paradigm\PayumTrustly\Action\NotifyAction;
 use Paradigm\PayumTrustly\Action\StatusAction;
 use Payum\Core\Bridge\Spl\ArrayObject;
+use Payum\Core\Bridge\Twig\TwigFactory;
 use Payum\Core\GatewayFactory;
 
 class TrustlyGatewayFactory extends GatewayFactory
@@ -19,12 +20,15 @@ class TrustlyGatewayFactory extends GatewayFactory
         $config->defaults([
             'payum.factory_name' => 'trustly',
             'payum.factory_title' => 'Trustly',
+            'payum.template.deposit' => '@ParadigmTrustly/Action/capture.html.twig',
+        ]);
 
+        $config->defaults([
             'payum.action.capture' => new CaptureAction(),
             'payum.action.notify' => new NotifyAction(),
             'payum.action.convert_payment' => new ConvertPaymentAction(),
             'payum.action.status' => new StatusAction(),
-            'payum.action.api.deposit' => new DepositAction(),
+            'payum.action.api.deposit' => new DepositAction($config['payum.template.deposit']),
         ]);
 
         if (false == $config['payum.api']) {
