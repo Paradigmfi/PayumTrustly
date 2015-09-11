@@ -20,15 +20,15 @@ class TrustlyGatewayFactory extends GatewayFactory
         $config->defaults([
             'payum.factory_name' => 'trustly',
             'payum.factory_title' => 'Trustly',
-            'payum.template.deposit' => '@ParadigmTrustly/Action/capture.html.twig',
+            'payum.template.deposit' => '@ParadigmTrustly/Action/deposit.html.twig',
         ]);
 
         $config->defaults([
-            'payum.action.capture' => new CaptureAction(),
+            'payum.action.capture' => new CaptureAction($config['payum.template.deposit']),
             'payum.action.notify' => new NotifyAction(),
             'payum.action.convert_payment' => new ConvertPaymentAction(),
             'payum.action.status' => new StatusAction(),
-            'payum.action.api.deposit' => new DepositAction($config['payum.template.deposit']),
+            'payum.action.api.deposit' => new DepositAction(),
         ]);
 
         if (false == $config['payum.api']) {

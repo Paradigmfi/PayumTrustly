@@ -5,10 +5,26 @@ use Paradigm\PayumTrustly\Request\Api\Deposit;
 use Payum\Core\Action\GatewayAwareAction;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
+use Payum\Core\Reply\HttpResponse;
 use Payum\Core\Request\Capture;
+use Payum\Core\Request\GetHttpRequest;
+use Payum\Core\Request\RenderTemplate;
 
 class CaptureAction extends GatewayAwareAction
 {
+    /**
+     * @var
+     */
+    private $depositTemplate;
+
+    /**
+     * @param string $depositTemplate
+     */
+    public function __construct($depositTemplate)
+    {
+        $this->depositTemplate = $depositTemplate;
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -22,11 +38,26 @@ class CaptureAction extends GatewayAwareAction
 
         // TODO check if still need to call deposit.
 
-        $this->gateway->execute(new Deposit($model));
+        if (false == $model['orderid']) {
+            $deposit = new Deposit($request->getToken());
+            $deposit->setModel($model);
 
-        // TODO render page
+            $this->gateway->execute($deposit);
+        }
 
-        throw new \LogicException('Not implemented');
+        $this->gateway->execute($httpRequest = new GetHttpRequest());
+        if (isset($httpRequest->query['returning'])) {
+            // user is comming back from the trustly side. just processed to done action.
+
+            return;
+        }
+
+        $renderTemplate = new RenderTemplate($this->depositTemplate, array(
+            'url' => $model['url'],
+        ));
+        $this->gateway->execute($renderTemplate);
+
+        throw new HttpResponse($renderTemplate->getResult());
     }
     /**
      * {@inheritDoc}

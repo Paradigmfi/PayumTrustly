@@ -1,43 +1,30 @@
 <?php
 namespace Paradigm\PayumTrustly\Action\Api;
 
+use League\Url\Url;
 use Paradigm\PayumTrustly\Request\Api\Deposit;
 use Payum\Core\Bridge\Spl\ArrayObject;
+use Payum\Core\Exception\LogicException;
 use Payum\Core\Exception\RequestNotSupportedException;
-use Payum\Core\Reply\HttpResponse;
 use Payum\Core\Request\GetHttpRequest;
-use Payum\Core\Request\RenderTemplate;
 use Payum\Core\Security\GenericTokenFactoryAwareInterface;
 use Payum\Core\Security\GenericTokenFactoryInterface;
 
 class DepositAction extends BaseApiAwareAction implements GenericTokenFactoryAwareInterface
 {
     /**
-     * @var
-     */
-    private $depositTemplate;
-
-    /**
      * @var GenericTokenFactoryInterface
      */
     protected $tokenFactory;
 
     /**
-     * @param string $depositTemplate
-     */
-    public function __construct($depositTemplate)
-    {
-        $this->depositTemplate = $depositTemplate;
-    }
-
-    /**
-     * @param GenericTokenFactoryInterface $genericTokenFactory
+     * @param GenericTokenFactoryInterface $tokenFactory
      *
      * @return void
      */
-    public function setGenericTokenFactory(GenericTokenFactoryInterface $genericTokenFactory = null)
+    public function setGenericTokenFactory(GenericTokenFactoryInterface $tokenFactory = null)
     {
-        $this->tokenFactory = $genericTokenFactory;
+        $this->tokenFactory = $tokenFactory;
     }
 
     /**
@@ -50,11 +37,16 @@ class DepositAction extends BaseApiAwareAction implements GenericTokenFactoryAwa
         RequestNotSupportedException::assertSupports($this, $request);
         $model = ArrayObject::ensureArrayObject($request->getModel());
 
+        if ($model['orderid']) {
+            throw new LogicException('Depositing is already started');
+        }
+
         if (empty($model['NotificationURL']) && $request->getToken() && $this->tokenFactory) {
             $notifyToken = $this->tokenFactory->createNotifyToken(
                 $request->getToken()->getGatewayName(),
                 $request->getToken()->getDetails()
             );
+
             $model['NotificationURL'] = $notifyToken->getTargetUrl();
         }
 
@@ -73,6 +65,8 @@ class DepositAction extends BaseApiAwareAction implements GenericTokenFactoryAwa
 
         $model->validateNotEmpty(array(
             'NotificationURL',
+            'SuccessURL',
+            'FailURL',
             'EndUserID',
             'MessageID',
             'Locale',
@@ -80,6 +74,14 @@ class DepositAction extends BaseApiAwareAction implements GenericTokenFactoryAwa
             'Currency',
             'Country',
         ));
+
+        $successUrl = Url::createFromUrl($model['SuccessURL']);
+        $successUrl->setQuery(['returning' => 1]);
+        $model['SuccessURL'] = (string) $successUrl;
+
+        $failUrl = Url::createFromUrl($model['FailURL']);
+        $failUrl->setQuery(['returning' => 1]);
+        $model['FailURL'] = (string) $failUrl;
 
         /** @var \Trustly_Data_JSONRPCSignedResponse $deposit */
         $deposit = $this->api->deposit(
@@ -106,13 +108,6 @@ class DepositAction extends BaseApiAwareAction implements GenericTokenFactoryAwa
         );
 
         $model->replace($deposit->getData());
-
-        $renderTemplate = new RenderTemplate($this->depositTemplate, array(
-            'url' => $model['url'],
-        ));
-        $this->gateway->execute($renderTemplate);
-
-        throw new HttpResponse($renderTemplate->getResult());
     }
     /**
      * {@inheritDoc}
