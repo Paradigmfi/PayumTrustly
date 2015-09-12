@@ -18,6 +18,18 @@ class StatusAction implements ActionInterface
         RequestNotSupportedException::assertSupports($this, $request);
         $model = ArrayObject::ensureArrayObject($request->getModel());
 
+        if ($model['credit']) {
+            $request->markCaptured();
+
+            return;
+        }
+
+        if ($model['pending']) {
+            $request->markPending();
+
+            return;
+        }
+
         if (false == $model['orderid']) {
             $request->markNew();
 

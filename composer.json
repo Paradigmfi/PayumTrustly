@@ -6,7 +6,7 @@
   "require": {
     "php": ">=5.5.0",
     "payum/core": "1.0.0-BETA1",
-    "trustly/trustly-client-php": "dev-patch-1"
+    "trustly/trustly-client-php": "master"
   },
   "config": {
     "bin-dir": "bin"
@@ -18,11 +18,5 @@
     "branch-alias": {
       "dev-master": "1.0-dev"
     }
-  },
-  "repositories": [
-      {
-          "type": "vcs",
-          "url": "git@github.com:makasim/trustly-client-php.git"
-      }
-  ]
+  }
 }

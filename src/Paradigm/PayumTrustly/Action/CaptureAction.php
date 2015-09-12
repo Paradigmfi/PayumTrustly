@@ -35,6 +35,9 @@ class CaptureAction extends GatewayAwareAction
         RequestNotSupportedException::assertSupports($this, $request);
         $model = ArrayObject::ensureArrayObject($request->getModel());
 
+        if ($model['returned']) {
+            return;
+        }
 
         // TODO check if still need to call deposit.
 
@@ -47,6 +50,8 @@ class CaptureAction extends GatewayAwareAction
 
         $this->gateway->execute($httpRequest = new GetHttpRequest());
         if (isset($httpRequest->query['returning'])) {
+            $model['returned'] = true;
+
             // user is comming back from the trustly side. just processed to done action.
 
             return;
