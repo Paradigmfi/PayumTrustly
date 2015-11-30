@@ -83,29 +83,32 @@ class DepositAction extends BaseApiAwareAction implements GenericTokenFactoryAwa
         $failUrl->setQuery(['returning' => 1]);
         $model['FailURL'] = (string) $failUrl;
 
-        /** @var \Trustly_Data_JSONRPCSignedResponse $deposit */
-        $deposit = $this->api->deposit(
-            $model['NotificationURL'],
-            $model['EndUserID'],
-            $model['MessageID'],
-            $model['Locale'],
-            $model['Amount'],
-            $model['Currency'],
-            $model['Country'],
-            $model['MobilePhone'],
-            $model['FirstName'],
-            $model['LastName'],
-            $model['NationalIdentificationNumber'],
-            $model['ShopperStatement'],
-            $model['IP'],
-            $model['SuccessURL'],
-            $model['FailURL'],
-            $model['TemplateURL'],
-            $model['URLTarget'],
-            $model['SuggestedMinAmount'],
-            $model['SuggestedMaxAmount'],
-            $model['IntegrationModule']
+        if(isset($model['HoldNotifications'])) {
+            $model['HoldNotifications'] = 1;
+        }
+        $parameters = array(
+            'NotificationURL' => $model['NotificationURL'],
+            'EndUserID' => $model['EndUserID'],
+            'MessageID' => $model['MessageID'],
         );
+        $allowedAttributes = array(
+            'Currency','Firstname','Lastname','Email','Locale',
+            'SuggestedMinAmount','SuggestedMaxAmount','Amount',
+            'Country','IP',
+            'SuccessURL','FailURL','TemplateURL','URLTarget',
+            'MobilePhone','NationalIdentificationNumber','ShopperStatement',
+            'ShippingAddressCountry','ShippingAddressPostcode','ShippingAddressCity','ShippingAddressStreet1','ShippingAddressStreet2'
+        );
+        $attributes = array();
+        foreach($allowedAttributes as $attribute){
+            if(isset($model[$attribute])){
+                $attributes[$attribute] = $model[$attribute];
+            }
+        }
+        /** @var \Trustly_Data_JSONRPCRequest $request */
+        $request = new \Trustly_Data_JSONRPCRequest('Deposit', $parameters, $attributes);
+        /** @var \Trustly_Data_JSONRPCSignedResponse $deposit */
+        $deposit = $this->api->call($request);
 
         $model->replace($deposit->getData());
     }
