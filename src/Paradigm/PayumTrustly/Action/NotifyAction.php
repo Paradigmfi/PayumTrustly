@@ -56,7 +56,9 @@ class NotifyAction extends GatewayAwareAction implements ApiAwareInterface
         }
 
         $model[$notification->getMethod()] = true;
-
+        if($model->offsetExists('notifications')){
+            $notifications = $model['notifications'];
+        }
         $notifications[] = [
             'method' => $notification->getMethod(),
             'data' => $notification->getData(),
