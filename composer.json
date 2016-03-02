@@ -5,7 +5,7 @@
   "license": "MIT",
   "require": {
     "php": ">=5.5.0",
-    "payum/core": "1.0.0-BETA1",
+    "payum/core": "^1",
     "trustly/trustly-client-php": "master"
   },
   "config": {
